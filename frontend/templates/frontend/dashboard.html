@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - TicketPro{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-indigo-700">Dashboard</h1>
+        <a href="{% url 'create_ticket' %}" class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition duration-300">
+            <i class="fas fa-plus mr-2"></i> Create Ticket
+        </a>
+    </div>
+
+    {% if user.user_type == 'support' or user.user_type == 'admin' %}
+    <div class="mb-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-2">Filter Tickets</h3>
+        <div class="flex flex-wrap gap-4">
+            <a href="{% url 'dashboard' %}" class="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 text-sm {% if not status_filter and not assigned_filter %}bg-indigo-600 text-white hover:bg-indigo-700{% endif %}">
+                All Tickets
+            </a>
+
+            <!-- Status filters -->
+            <a href="{% url 'dashboard' %}?status=open" class="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 text-sm {% if status_filter == 'open' %}bg-indigo-600 text-white hover:bg-indigo-700{% endif %}">
+                Open
+            </a>
+            <a href="{% url 'dashboard' %}?status=in_progress" class="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 text-sm {% if status_filter == 'in_progress' %}bg-indigo-600 text-white hover:bg-indigo-700{% endif %}">
+                In Progress
+            </a>
+            <a href="{% url 'dashboard' %}?status=resolved" class="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 text-sm {% if status_filter == 'resolved' %}bg-indigo-600 text-white hover:bg-indigo-700{% endif %}">
+                Resolved
+            </a>
+            <a href="{% url 'dashboard' %}?status=closed" class="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 text-sm {% if status_filter == 'closed' %}bg-indigo-600 text-white hover:bg-indigo-700{% endif %}">
+                Closed
+            </a>
+
+            <!-- Assignment filters -->
+            <a href="{% url 'dashboard' %}?assigned=me" class="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 text-sm {% if assigned_filter == 'me' %}bg-indigo-600 text-white hover:bg-indigo-700{% endif %}">
+                Assigned to Me
+            </a>
+            <a href="{% url 'dashboard' %}?assigned=unassigned" class="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 text-sm {% if assigned_filter == 'unassigned' %}bg-indigo-600 text-white hover:bg-indigo-700{% endif %}">
+                Unassigned
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center">
+                <div class="rounded-full bg-blue-100 p-3 mr-4">
+                    <i class="fas fa-ticket-alt text-blue-600 text-xl"></i>
+                </div>
+                <div>
+                    <div class="text-sm text-gray-500">Total Tickets</div>
+                    <div class="text-2xl font-bold">{{ stats.total_tickets }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center">
+                <div class="rounded-full bg-yellow-100 p-3 mr-4">
+                    <i class="fas fa-clock text-yellow-600 text-xl"></i>
+                </div>
+                <div>
+                    <div class="text-sm text-gray-500">Open Tickets</div>
+                    <div class="text-2xl font-bold">{{ stats.open_tickets }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center">
+                <div class="rounded-full bg-green-100 p-3 mr-4">
+                    <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                </div>
+                <div>
+                    <div class="text-sm text-gray-500">Resolved Tickets</div>
+                    <div class="text-2xl font-bold">{{ stats.resolved_tickets }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center">
+                <div class="rounded-full bg-red-100 p-3 mr-4">
+                    <i class="fas fa-exclamation-circle text-red-600 text-xl"></i>
+                </div>
+                <div>
+                    <div class="text-sm text-gray-500">Urgent Tickets</div>
+                    <div class="text-2xl font-bold">{{ stats.urgent_tickets }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tickets Table -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="px-6 py-4 border-b">
+            <h2 class="text-xl font-semibold">Your Tickets</h2>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                        {% if user.user_type == 'support' or user.user_type == 'admin' %}
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created By</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned To</th>
+                        {% endif %}
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% if tickets %}
+                        {% for ticket in tickets %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#{{ ticket.id }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ ticket.title }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                    {% if ticket.status == 'open' %}bg-yellow-100 text-yellow-800
+                                    {% elif ticket.status == 'in_progress' %}bg-blue-100 text-blue-800
+                                    {% elif ticket.status == 'resolved' %}bg-green-100 text-green-800
+                                    {% elif ticket.status == 'closed' %}bg-gray-100 text-gray-800
+                                    {% endif %}">
+                                    {{ ticket.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                    {% if ticket.priority == 'low' %}bg-green-100 text-green-800
+                                    {% elif ticket.priority == 'medium' %}bg-blue-100 text-blue-800
+                                    {% elif ticket.priority == 'high' %}bg-orange-100 text-orange-800
+                                    {% elif ticket.priority == 'urgent' %}bg-red-100 text-red-800
+                                    {% endif %}">
+                                    {{ ticket.get_priority_display }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ ticket.created_at|date:"M d, Y" }}</td>
+                            {% if user.user_type == 'support' or user.user_type == 'admin' %}
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ ticket.created_by.get_full_name }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {% if ticket.assigned_to %}
+                                    {{ ticket.assigned_to.get_full_name }}
+                                {% else %}
+                                    <span class="text-gray-400">Unassigned</span>
+                                {% endif %}
+                            </td>
+                            {% endif %}
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <a href="{% url 'ticket_detail' ticket.id %}" class="text-indigo-600 hover:text-indigo-900">View</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="{% if user.user_type == 'support' or user.user_type == 'admin' %}8{% else %}6{% endif %}" class="px-6 py-4 text-center text-gray-500">
+                                No tickets found.
+                                {% if status_filter or assigned_filter %}
+                                    Try changing your filter settings.
+                                {% else %}
+                                    <a href="{% url 'create_ticket' %}" class="text-indigo-600 hover:text-indigo-900">Create your first ticket</a>.
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
