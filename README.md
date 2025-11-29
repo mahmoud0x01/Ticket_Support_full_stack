@@ -153,10 +153,4 @@ python manage.py test
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## 📞 Contact
-
-Project Link: [https://github.com/yourusername/support_system](https://github.com/yourusername/support_system)
-
 ---
-
-Built with ❤️ using Django, Channels, and modern web technologies.
